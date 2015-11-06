@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>Covoiturage</title>
+		<script src="./jquery-1.11.3.min.js"></script>
+	</head>
+	<body>
+		<div id="conteneur">
+			<fieldset>
+				<legend>Liste des conducteurs</legend>
+				<p>
+				La liste des conducteurs est un element StringProjet AOS ayant la forme de JSON en prevoyance d'eventuelles evolutions.
+				<br/>
+				Appuyez le bouton "Actualiser" afin de faire apparaitre les modifications apportees par les fonctions ci-dessous.
+				</p>
+				<p id="text"></p>
+				<form><input id="actu" type="button" value="Actualiser" onclick="getAll();"/></form>
+			</fieldset>
+			<br/>
+
+			<fieldset>
+				<legend>Ajouter un conducteur</legend>
+				<div id="edit">
+					<form>
+						<p>Entrez le nom du conducteur que vous souhaitez enregistrer.</p>
+						<label>Nom</label> : <input id="conducteur" type="text" name="nom"/>
+						<input id="ajout" type="button" value="ajouter" onclick="addC();"/>
+					</form>
+					<p id="retour"></p>
+				</div>
+			</fieldset>
+			<br/>
+
+			<fieldset>
+				<legend>Supprimer un conducteur</legend>
+				<div id="suppression">
+					<form>
+						<p>Entrez l'identifiant du conducteur que vous souhaitez retirer.</p>
+						<label>id</label> : <input id="id" type="text" name="id"/>
+						<input id="suppression" type="button" value="supprimer" onclick="deleteC();"/>
+					</form>
+					<p id="confirmation"></p>
+				</div>
+			</fieldset>
+			<br/>
+
+			<fieldset>
+				<legend>Incrémenter compteurs</legend>
+				<div id="increment">
+					<form>
+						<p>
+						Saisissez l'identifiant de l'individu pour lequel vous souhaitez apporter une modification.
+						<br/>
+						Appuyez "+1 Participaton" pour augmenter le compteur si l'individu etait present pour un trajet.
+						<br/>
+						Appuyez "+1 Conduite" pour augmenter le compteur si l'individu a conduit lors d'un trajet.
+						<br/>
+						(Un individu ayant conduit lors d'un trajet se voit son compteur de participation augmenter egalement)
+						</p>
+						<label>Id</label> : <input id="idincr" type="text" name="name"/>
+						<input id="incrtot" type="button" value="+1 Participation" onclick="incrtotal();"/>
+						<input id="incrcond" type="button" value="+1 Conduite" onclick="incrconduit();"/>
+					</form>
+					<p id="confincr"></p>
+				</div>
+			</fieldset>
+			<br/>
+
+			<fieldset>
+				<legend>Décrémenter compteurs</legend>
+				<div id="decrement">
+					<form>
+						<p>
+						Cette section permet de corriger une saisie erronee
+						<br/>
+						(Un compteur a 0 ne pourra pas etre diminue -> retour false)
+						</p>
+						<label>Id</label> : <input id="iddecr" type="text" name="name"/>
+						<input id="decrtot" type="button" value="-1 Participation" onclick="decrtotal();"/>
+						<input id="decrcond" type="button" value="-1 Conduite" onclick="decrconduit();"/>
+					</form>
+					<p id="confdecr"></p>
+				</div>
+			</fieldset>
+			<br/>
+
+			<fieldset>
+				<legend>Ratio minimal</legend>
+				<div id="decrement">
+					<form>
+						<p>
+						Le conducteur ayant le ratio le plus bas est celui qui devra conduire en priorité pour un prochain trajet.
+						<br/>
+						Le ratio est calule de la maniere suivante : nb trajet conduit / nb de trajet participé.
+						<br/>
+						(Le nombre total de participation est constamment augmente pour eviter la division par zero)
+						<br/>
+						(La seule possibilite de division par zero est lors de la creation d'un individu, geree en retournant un ratio a zero le cas echeant)
+						</p>
+						<input id="ratio" type="button" value="Determiner le conducteur" onclick="getRatioMin();"/>
+					</form>
+					<p id="ratioMinText"></p>
+				</div>
+			</fieldset>
+		</div>
+		<script>
+				function getAll(){
+					$.ajax({
+						type:'GET',
+						contentType:'application/html',
+						url:'/GestionCovoiturage/rest/CovoiturageService/conducteurs/',
+						dataType:'html',
+						success:function(data){
+							$('#text').html(data);
+						}
+					});
+				}
+				getAll();
+
+				function addC(){
+					$.ajax({
+						type:'PUT',
+						contentType:'application/x-www-form-urlencoded',
+						url:'/GestionCovoiturage/rest/CovoiturageService/conducteurs/add?name=' + $('#conducteur').val(),
+						dataType:'html',
+						success:function(data){
+							$('#retour').html(data);
+						}
+					});
+				}
+
+				function deleteC(){
+					$.ajax({
+						type:'DELETE',
+						url:'/GestionCovoiturage/rest/CovoiturageService/conducteurs/' + $('#id').val(),
+						dataType:'html',
+						success:function(data){
+							$('#confirmation').html("id "+ $('#id').val() +" : "+data);
+						}
+					});
+				}
+
+				function incrtotal(){
+					$.ajax({
+						type:'POST',
+						contentType:'application/x-www-form-urlencoded',
+						url:'/GestionCovoiturage/rest/CovoiturageService/conducteurs/increase/total?idC=' + $('#idincr').val(),
+						dataType:'html',
+						success:function(data){
+							$('#confincr').html("id "+ $('#idincr').val() +" : "+data);
+						}
+					});
+				}
+
+				function decrtotal(){
+					$.ajax({
+						type:'POST',
+						contentType:'application/x-www-form-urlencoded',
+						url:'/GestionCovoiturage/rest/CovoiturageService/conducteurs/decrease/total?idC=' + $('#iddecr').val(),
+						dataType:'html',
+						success:function(data){
+							$('#confdecr').html("id "+ $('#iddecr').val() +" : "+data);
+						}
+					});
+				}
+
+				function incrconduit(){
+					$.ajax({
+						type:'POST',
+						contentType:'application/x-www-form-urlencoded',
+						url:'/GestionCovoiturage/rest/CovoiturageService/conducteurs/increase/conduit?idC=' + $('#idincr').val(),
+						dataType:'html',
+						success:function(data){
+							$('#confincr').html("id "+ $('#idincr').val() +" : "+data);
+						}
+					});
+				}
+
+				function decrconduit(){
+					$.ajax({
+						type:'POST',
+						contentType:'application/x-www-form-urlencoded',
+						url:'/GestionCovoiturage/rest/CovoiturageService/conducteurs/decrease/conduit?idC=' + $('#iddecr').val(),
+						dataType:'html',
+						success:function(data){
+							$('#confdecr').html("id "+ $('#iddecr').val() +" : "+data);
+						}
+					});
+				}
+
+				function getRatioMin(){
+					$.ajax({
+						type:'GET',
+						contentType:'application/html',
+						url:'/GestionCovoiturage/rest/CovoiturageService/conducteurs/ratio',
+						dataType:'html',
+						success:function(data){
+							$('#ratioMinText').html("Le ratio minimum est : "+data);
+						}
+					});
+				}
+		</script>
+	</body>
+</html>
